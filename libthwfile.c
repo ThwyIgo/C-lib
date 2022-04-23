@@ -1,4 +1,4 @@
-#include "libthwfile.h"
+#include "include/libthwfile.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,25 +6,25 @@
 
 // Deleta linhas de um arquivo, número de linhas é inclusivo. Uso: del_linha(número da 1ª linha a ser deletada, número da última linha a ser deletada, ponteiro do arquivo, modo fopen quando a função retornar ou "c" para fechar, tamanho do arquivo em caracteres)
 // Hard-coded para não funcionar em arquivos com mais de 256 caracteres por linha, já que ocuparia muito espaço na stack. Caso isso seja necessário, use uma função que escreva diretamente no disco em vez de um array.
-// O limite pode ser expandido até 1024 caracteres. O tamanho da primeira linha define o limite para o resto do arquivo.
+// O limite pode ser expandido até 1023 caracteres. O tamanho da primeira linha define o limite para o resto do arquivo.
 void del_linhas(int ini_deletar, int fim_deletar, FILE *arquivo, char mode_return[], long int arq_size)
 {
     freopen(NULL, "r", arquivo);
     int linha_atual=1;
     unsigned short linha_tamanho;
 
-    {
-        char foo[1025] = {'\0'}; // Será apagado da stack logo ao sair do escopo, não tem tanto problema ser grande
+    { // Expandir o tamanho permitido de linhas caso a primeira seja grande
+        char *foo = malloc(1024 * sizeof *foo); foo[1023] = '\0';
         fscanf(arquivo, "%[^\n] ", foo);
-        if (foo[1024] != '\0') {
+        if (foo[1023] != '\0') {
             fprintf(stderr, "Erro del_linhas: Linha do arquivo é muito grande\n");
             exit(EXIT_FAILURE);
         }
-        linha_tamanho = strlen(foo); // Margem de segurança para arquivos que já comecem com linhas enormes.
-        rewind(arquivo);
+        linha_tamanho = strlen(foo) + 2; // Incluir o \n e \0
+        free(foo);
     }
+    rewind(arquivo);
     linha_tamanho = fmax(linha_tamanho, 256); // Garantir pelo menos 256 caracteres.
-    
     char arq_linha[linha_tamanho], arq_origin[arq_size]; arq_origin[0] = '\0'; // '\0' garante que o strcat funcionará
 
     while (fgets(arq_linha, linha_tamanho, arquivo) != NULL) {
