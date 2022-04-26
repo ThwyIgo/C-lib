@@ -21,7 +21,7 @@ objdir:
 	@mkdir -p $(OBJDIR)
 
 $(BINARY): $(OBJECTS)
-	$(CC) -lm -o $@ $^
+	$(CC) -lm -g -o $@ $^
 
 # only want the .c file dependency here, thus $< instead of $^.
 $(OBJDIR)%.o:%.c
