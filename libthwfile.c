@@ -20,6 +20,7 @@ void del_linhas(int ini_deletar, int fim_deletar, FILE *arquivo, char mode_retur
         fscanf(arquivo, "%[^\n] ", foo);
         if (foo[1023] != '\0') {
             fprintf(stderr, "Erro del_linhas: Linha do arquivo é muito grande\n");
+            free(foo);
             exit(EXIT_FAILURE);
         }
         linha_tamanho = strlen(foo) + 2; // Incluir o \n e \0
@@ -52,14 +53,19 @@ void del_linhas(int ini_deletar, int fim_deletar, FILE *arquivo, char mode_retur
 // Deleta linhas de um arquivo, número de linhas é inclusivo. Uso: del_linha(número da 1ª linha a ser deletada, número da última linha a ser deletada, ponteiro do arquivo, modo fopen quando a função retornar ou "c" para fechar, tamanho do arquivo em caracteres). A operação é feita no disco.
 /* Limitações:
    As linhas podem conter no máximo 2048 caracteres.
-   Pouco seguro no momento.
 */
 void del_linhas_disk(int ini_deletar, int fim_deletar, FILE *arquivo, char mode_return[])
 {
     freopen(NULL, "r", arquivo);
-    char arq_linha[2048], tempname[L_tmpnam + 1];
-    FILE *temp = fopen(tmpnam(tempname), "w"); // Trocar tmpnam por mkstemp ou mkstemps para maior segurança.
+    char arq_linha[2048];
+    FILE *temp = tmpfile(); // É aberto no modo "wb+"
     int linha_atual=1;
+
+    if (temp == NULL) {
+        fprintf(stderr, "Erro del_linhas_disk: Não foi possível criar um arquivo temporário.");
+        fclose(temp);
+        exit(EXIT_FAILURE);
+    }
 
     while (fgets(arq_linha, 2048, arquivo) != NULL) {
         if (linha_atual < ini_deletar || linha_atual > fim_deletar)
@@ -68,6 +74,7 @@ void del_linhas_disk(int ini_deletar, int fim_deletar, FILE *arquivo, char mode_
     }
     if (linha_atual <= ini_deletar || linha_atual <= fim_deletar) {
         fprintf(stderr, "Erro del_linhas_disk: Não foi possível encontrar o intervalo no arquivo\n");
+        fclose(temp);
         exit(EXIT_FAILURE);
     }
     
@@ -81,7 +88,6 @@ void del_linhas_disk(int ini_deletar, int fim_deletar, FILE *arquivo, char mode_
     else
         freopen(NULL, mode_return, arquivo);
     fclose(temp);
-    remove(tempname);
 
     return;
 }
