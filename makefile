@@ -1,36 +1,51 @@
-BINARY=bin
-CODEDIRS=.
-INCDIRS=./include/
-OBJDIR=./objects/
+## Para gerar executáveis para windows a partir do linux, instale o pacote "mingw-w64" (debian/arch) ou equivalente.
 
+## Definindo variáveis específicas para cada sistema
+ifdef OS # Windows
+	FixPath = $(subst /,\,$1)
+	RM=del /s /F /q
+	ZIP=powershell Compress-Archive -DestinationPath
+else
+   ifeq ($(shell uname), Linux) # Linux
+      FixPath = $1
+      RM=rm -rf
+	  ZIP=zip
+   endif
+endif
+
+## Variáveis genéricas
 CC=gcc
-OPT=-O0
-# generate files that encode make rules for the .h dependencies
-DEPFLAGS=-MP -MD
-# automatically add the -I onto each include directory
-CFLAGS=-Wall -Wextra -g -lm $(foreach D,$(INCDIRS),-I$(D)) $(OPT) $(DEPFLAGS)
+CFLAGS=-Wall -g -lm -I$(INC)
+SRC=src
+OBJ=obj
+INC=include
+SRCS=$(wildcard $(SRC)/*.c)
+OBJS=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRCS))
+BINDIR=bin
+BIN=$(BINDIR)/main.exe
+SUBMITNAME=projeto.zip
 
-CFILES=$(foreach D,$(CODEDIRS),$(wildcard $(D)/*.c))
-# regular expression replacement
-OBJECTS=$(patsubst %.c,$(OBJDIR)%.o,$(CFILES))
-DEPFILES=$(patsubst %.c,$(OBJDIR)%.d,$(CFILES))
+all: $(BIN)
 
-all: objdir $(BINARY)
+forWindows: CC=x86_64-w64-mingw32-gcc
+forWindows: all
 
-objdir:
-	@mkdir -p $(OBJDIR)
+release: CFLAGS=-Wall -O2 -lm -DNDEBUG -I$(INC)
+release: clean
+release: $(BIN)
 
-$(BINARY): $(OBJECTS)
-	$(CC) -lm -g -o $@ $^
+$(BIN): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@
 
-# only want the .c file dependency here, thus $< instead of $^.
-$(OBJDIR)%.o:%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+$(OBJ)/%.o: $(SRC)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+submit:
+	$(RM) $(SUBMITNAME)
+	$(ZIP) $(SUBMITNAME) *
+
+run: $(BIN)
+	$(call FixPath,$(BIN))
 
 clean:
-	rm -r $(BINARY) $(OBJDIR) #$(DEPFILES)
-
-# @ silences the printing of the command
-
-# include the dependencies
--include $(DEPFILES)
+	$(RM) $(call FixPath,$(BINDIR)/*.exe $(OBJ)/*.o $(SUBMITNAME))
