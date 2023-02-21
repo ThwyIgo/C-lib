@@ -1,4 +1,5 @@
 ## Para gerar executáveis para windows a partir do linux, instale o pacote "mingw-w64" (debian/arch) ou equivalente.
+## (Apenas para Linux) Para gerar "compile_commands.json" (necessário para que o clangd interprete corretamente a organização do projeto), instale "bear" (Build EAR).
 
 ## Definindo variáveis específicas para cada sistema
 ifdef OS # Windows
@@ -7,15 +8,16 @@ ifdef OS # Windows
 	ZIP=powershell Compress-Archive -DestinationPath
 else
    ifeq ($(shell uname), Linux) # Linux
-      FixPath = $1
-      RM=rm -rf
-	  ZIP=zip
+	FixPath = $1
+	RM=rm -rf
+	ZIP=zip
    endif
 endif
 
 ## Variáveis genéricas
-CC=gcc
-CFLAGS=-Wall -g -lm -I$(INC)
+CC ?= gcc
+CFLAGS ?= -g
+ALL_CFLAGS=-Wall -pedantic-errors -lm -I$(INC) $(CFLAGS)
 SRC=src
 OBJ=obj
 INC=include
@@ -30,15 +32,15 @@ all: $(BIN)
 forWindows: CC=x86_64-w64-mingw32-gcc
 forWindows: all
 
-release: CFLAGS=-Wall -O2 -lm -DNDEBUG -I$(INC)
+release: ALL_CFLAGS=-Wall -pedantic-errors -lm -I$(INC) -O2 -DNDEBUG
 release: clean
 release: $(BIN)
 
 $(BIN): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@
+	$(CC) $(ALL_CFLAGS) $(OBJS) -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 submit:
 	$(RM) $(SUBMITNAME)
@@ -49,3 +51,7 @@ run: $(BIN)
 
 clean:
 	$(RM) $(call FixPath,$(BINDIR)/*.exe $(OBJ)/*.o $(SUBMITNAME))
+
+## Apenas no Linux
+genconfig-linux: clean
+	bear -- make clean all
