@@ -1,3 +1,4 @@
+#include "thw/tempo.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>

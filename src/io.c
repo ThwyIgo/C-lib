@@ -1,8 +1,7 @@
-#include "thwio.h"
-#include "thwtempo.h"
+#include "thw/io.h"
+#include "thw/tempo.h"
 #include <stdio.h>
 #include <string.h>
-
 
 void limpaBuffer()
 {
