@@ -16,8 +16,12 @@ endif
 
 ## Variáveis genéricas
 CC ?= gcc
-CFLAGS ?= -g
-ALL_CFLAGS=-Wall -pedantic-errors -lm -I$(INC) $(CFLAGS)
+# Flags que devem estar presentes em (quase) todos os comandos de compilação
+CFLAGS ?= -pedantic-errors -Wall -lm -I$(INC)
+# ALL_CFLAGS são flags aplicadas em builds padrões (make all)
+ALL_CFLAGS=$(CFLAGS) -g
+RELEASE_CFLAGS=$(CFLAGS) -O2 -DNDEBUG
+DEBUG_CFLAGS=$(CFLAGS) -g -fsanitize=address -fsanitize=undefined
 SRC=src
 OBJ=obj
 INC=include
@@ -32,9 +36,12 @@ all: $(BIN)
 forWindows: CC=x86_64-w64-mingw32-gcc
 forWindows: all
 
-release: ALL_CFLAGS=-Wall -pedantic-errors -lm -I$(INC) -O2 -DNDEBUG
+release: ALL_CFLAGS=$(RELEASE_CFLAGS)
 release: clean
 release: $(BIN)
+
+debug: ALL_CFLAGS=$(DEBUG_CFLAGS)
+debug: $(BIN)
 
 $(BIN): $(OBJS)
 	$(CC) $(ALL_CFLAGS) $(OBJS) -o $@
