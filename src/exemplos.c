@@ -1,4 +1,5 @@
 #include "thw/bitfields.h"
+#include "thw/bstree.h"
 #include "thw/file.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,8 +7,36 @@
 #define TAMANHO_BUFFER 128
 #define MAX_LINHAS 16
 
+// Defining bstree functions
+bool bst_less(treeValue a, treeValue b)
+{
+    return a < b;
+}
+
+bool bst_equal(treeValue a, treeValue b)
+{
+    return a == b;
+}
+
+void bst_printValue(treeValue value)
+{
+    printf("%d", value);
+}
+
 int main()
 {
+    { // Binary search tree
+        BSTree myTree = newBSTree(10);
+
+        bst_insert(&myTree, 20);
+        bst_insert(&myTree, 21);
+        bst_insert(&myTree, 5);
+        bst_printTree(myTree);
+        printf("Height of the tree: %ld\n", bst_height(myTree));
+        delBSTree(&myTree);
+        return 0;
+    }
+
     { // bitfields
         uint8_t myBitF = 0;
 
