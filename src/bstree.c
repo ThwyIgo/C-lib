@@ -9,12 +9,6 @@ typedef struct s_BSTree
     struct s_BSTree *left, *right;
 } * BSTree;
 
-// Tentar não usar esta função
-bool bst_greater(treeValue a, treeValue b)
-{
-    return !bst_equal(a, b) && !bst_less(a, b);
-}
-
 #define bst_max(a, b) (bst_less(a, b) ? b : a)
 
 BSTree newBSTree(treeValue initialValue)
@@ -114,13 +108,28 @@ bool bst_insert(BSTree *tree, treeValue value)
         return true;
     }
 
-    if (bst_equal((*tree)->value, value))
+    if (bst_equal(bst_getKeyByValue((*tree)->value), bst_getKeyByValue(value)))
         return false;
 
-    if (bst_less(value, (*tree)->value))
+    if (bst_less(bst_getKeyByValue(value), bst_getKeyByValue((*tree)->value)))
         return bst_insert(&(*tree)->left, value);
 
     return bst_insert(&(*tree)->right, value);
+}
+
+bool bst_find(BSTree tree, treeValueKey key, treeValue *retValue)
+{
+    if (tree == NULL)
+        return false;
+    if (bst_equal(bst_getKeyByValue(tree->value), key)) {
+        *retValue = tree->value;
+        return true;
+    }
+
+    if (bst_less(key, bst_getKeyByValue(tree->value)))
+        return bst_find(tree->left, key, retValue);
+    else
+        return bst_find(tree->right, key, retValue);
 }
 
 ///// IO /////

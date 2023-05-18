@@ -8,32 +8,49 @@
 #define MAX_LINHAS 16
 
 // Defining bstree functions
-bool bst_less(treeValue a, treeValue b)
+struct treePair
+{
+    int key; // treeValueKey
+    char str[32];
+}; // treeValue
+
+treeValueKey bst_getKeyByValue(treeValue value)
+{
+    return value->key;
+}
+
+bool bst_less(treeValueKey a, treeValueKey b)
 {
     return a < b;
 }
 
-bool bst_equal(treeValue a, treeValue b)
+bool bst_equal(treeValueKey a, treeValueKey b)
 {
     return a == b;
 }
 
 void bst_printValue(treeValue value)
 {
-    printf("%d", value);
+    printf("%d,%s", value->key, value->str);
 }
 
 int main()
 {
     { // Binary search tree
-        BSTree myTree = newBSTree(10);
+        BSTree myTree = newBSTree(&(struct treePair){ 10, "First" });
 
-        bst_insert(&myTree, 20);
-        bst_insert(&myTree, 21);
-        bst_insert(&myTree, 5);
+        bst_insert(&myTree, &(struct treePair){ 35, "Second" });
+        bst_insert(&myTree, &(struct treePair){ 21, "Third" });
+        bst_insert(&myTree, &(struct treePair){ 5, "Fourth" });
         bst_printTree(myTree);
         printf("Height of the tree: %ld\n", bst_height(myTree));
+        treeValue ret;
+        if (bst_find(myTree, 21, &ret))
+            printf("The value %s was found!\n", ret->str);
+        else
+            puts("Key not found in the tree");
         delBSTree(&myTree);
+
         return 0;
     }
 
