@@ -1,6 +1,7 @@
 #include "thw/bitfields.h"
 #include "thw/bstree.h"
 #include "thw/file.h"
+#include "thw/sstack.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -13,20 +14,20 @@ struct treePair
     int key; // treeValueKey
     char str[32];
 }; // treeValue
+#define mkPair(k, v)                                                           \
+    (struct treePair)                                                          \
+    {                                                                          \
+        k, v                                                                   \
+    }
 
 treeValueKey bst_getKeyByValue(treeValue value)
 {
     return value->key;
 }
 
-bool bst_less(treeValueKey a, treeValueKey b)
+int bst_compare(treeValueKey a, treeValueKey b)
 {
-    return a < b;
-}
-
-bool bst_equal(treeValueKey a, treeValueKey b)
-{
-    return a == b;
+    return a == b ? 0 : a < b ? -1 : 1;
 }
 
 void bst_printValue(treeValue value)
@@ -36,17 +37,32 @@ void bst_printValue(treeValue value)
 
 int main()
 {
-    { // Binary search tree
-        BSTree myTree = newBSTree(&(struct treePair){ 10, "First" });
+    { // Sequential Stack
+        puts("\n=== Stack ===");
+        Stack myStack = newStack();
+        for (int i = 1; i <= 5; ++i)
+            stack_push(myStack, i);
+        for (int i = 1; i <= 5; ++i)
+            printf("%d\n", stack_pop(myStack));
+        delStack(myStack);
+    }
 
-        bst_insert(&myTree, &(struct treePair){ 35, "Second" });
-        bst_insert(&myTree, &(struct treePair){ 21, "Third" });
-        bst_insert(&myTree, &(struct treePair){ 5, "Fourth" });
+    { // Binary search tree
+        puts("\n=== Binary search tree ===");
+        BSTree myTree = newBSTree(&(struct treePair){ 1, "First" });
+
+        bst_insert(&myTree, &mkPair(35, "Second"));
+        bst_insert(&myTree, &mkPair(21, "Third"));
+        bst_insert(&myTree, &mkPair(5, "Fourth"));
+        bst_insert(&myTree, &mkPair(6, "Sixth"));
+        bst_insert(&myTree, &mkPair(7, "Seventh"));
+        bst_insert(&myTree, &mkPair(8, "Eighth"));
+
         bst_printTree(myTree);
         printf("Height of the tree: %ld\n", bst_height(myTree));
         treeValue ret;
-        if (bst_find(myTree, 21, &ret))
-            printf("The value %s was found!\n", ret->str);
+        if (bst_find(myTree, 35, &ret))
+            printf("The value \"%s\" was found!\n", ret->str);
         else
             puts("Key not found in the tree");
         delBSTree(&myTree);

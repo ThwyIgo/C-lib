@@ -9,7 +9,7 @@ typedef struct s_BSTree
     struct s_BSTree *left, *right;
 } * BSTree;
 
-#define bst_max(a, b) (bst_less(a, b) ? b : a)
+#define bst_max(a, b) (bst_compare(a, b) >= 0 ? a : b)
 
 BSTree newBSTree(treeValue initialValue)
 {
@@ -98,7 +98,11 @@ static void bst_RLrotation(BSTree *tree)
 
 //////////
 
-// Ainda não é AVL
+static short bst_balanceFactor(BSTree tree)
+{
+    return bst_height(tree->right) - bst_height(tree->left);
+}
+
 bool bst_insert(BSTree *tree, treeValue value)
 {
     if (*tree == NULL) {
@@ -108,25 +112,49 @@ bool bst_insert(BSTree *tree, treeValue value)
         return true;
     }
 
-    if (bst_equal(bst_getKeyByValue((*tree)->value), bst_getKeyByValue(value)))
+    if (bst_compare(bst_getKeyByValue((*tree)->value),
+                    bst_getKeyByValue(value)) == 0)
         return false;
 
-    if (bst_less(bst_getKeyByValue(value), bst_getKeyByValue((*tree)->value)))
-        return bst_insert(&(*tree)->left, value);
+    bool ret;
+    if (bst_compare(bst_getKeyByValue(value),
+                    bst_getKeyByValue((*tree)->value)) < 0)
+        ret = bst_insert(&(*tree)->left, value);
+    else
+        ret = bst_insert(&(*tree)->right, value);
+    if (ret == false)
+        return false;
 
-    return bst_insert(&(*tree)->right, value);
+#ifndef NO_AVL
+    short bf = bst_balanceFactor(*tree);
+    // Checking if the tree is balanced
+    if (bf <= -2) {
+        if (bst_balanceFactor((*tree)->left) < 0)
+            bst_LLrotation(tree);
+        else
+            bst_LRrotation(tree);
+    }
+    if (bf >= 2) {
+        if (bst_balanceFactor((*tree)->right) > 0)
+            bst_RRrotation(tree);
+        else
+            bst_RLrotation(tree);
+    }
+#endif
+
+    return ret;
 }
 
 bool bst_find(BSTree tree, treeValueKey key, treeValue *retValue)
 {
     if (tree == NULL)
         return false;
-    if (bst_equal(bst_getKeyByValue(tree->value), key)) {
+    if (bst_compare(bst_getKeyByValue(tree->value), key) == 0) {
         *retValue = tree->value;
         return true;
     }
 
-    if (bst_less(key, bst_getKeyByValue(tree->value)))
+    if (bst_compare(key, bst_getKeyByValue(tree->value)) < 0)
         return bst_find(tree->left, key, retValue);
     else
         return bst_find(tree->right, key, retValue);

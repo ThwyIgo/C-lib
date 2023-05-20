@@ -10,7 +10,7 @@
    Functions that take a BSTree* may change the tree; functions that take a
    BSTree won't change the tree.
  */
-
+//#define NO_AVL // Define to disable auto-balancing of the tree
 #include <stdbool.h>
 
 ///// SETUP /////
@@ -20,13 +20,12 @@ typedef struct treePair *treeValue;
 // What is the type of the key?
 typedef int treeValueKey;
 
-// Define the following 4 functions in your code
+// Define the following 3 functions in your code
 
 treeValueKey bst_getKeyByValue(treeValue value);
 
-bool bst_less(treeValueKey a, treeValueKey b);
-
-bool bst_equal(treeValueKey a, treeValueKey b);
+// Return 0 if a == b, -1 if a < b, 1 if a > b
+int bst_compare(treeValueKey a, treeValueKey b);
 
 // Should print the value without any '\n'
 void bst_printValue(treeValue value);
@@ -45,7 +44,6 @@ void delBSTree(BSTree *tree);
  * BSTree with 0 elements has height -1 */
 long bst_height(BSTree tree);
 
-// Ainda não é AVL
 bool bst_insert(BSTree *tree, treeValue value);
 
 /* Set "retValue" to the treeValue which has key = "key".
