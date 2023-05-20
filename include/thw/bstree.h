@@ -24,7 +24,7 @@ typedef int treeValueKey;
 
 treeValueKey bst_getKeyByValue(treeValue value);
 
-// Return 0 if a == b, -1 if a < b, 1 if a > b
+// Returns 0 if a == b, -1 if a < b, 1 if a > b
 int bst_compare(treeValueKey a, treeValueKey b);
 
 // Should print the value without any '\n'
@@ -40,11 +40,16 @@ BSTree newBSTree(treeValue initialValue);
 /* Dealocates a BSTree and all it's subtrees */
 void delBSTree(BSTree *tree);
 
+/* Returns true if value was inserted, returns false otherwise.
+   The tree doesn't support duplicated keys to be inserted.
+ */
+bool bst_insert(BSTree *tree, treeValue value);
+
+bool bst_remove(BSTree *tree, treeValueKey key);
+
 /* Greatest height of a BSTree. A BSTree with 1 element has height 0, and a
  * BSTree with 0 elements has height -1 */
 long bst_height(BSTree tree);
-
-bool bst_insert(BSTree *tree, treeValue value);
 
 /* Set "retValue" to the treeValue which has key = "key".
    Returns true if a value was found, false otherwise.

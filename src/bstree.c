@@ -145,6 +145,51 @@ bool bst_insert(BSTree *tree, treeValue value)
     return ret;
 }
 
+static BSTree *bst_findMaxValueSubtree(BSTree *tree)
+{
+    if ((*tree)->right == NULL)
+        return tree;
+    return bst_findMaxValueSubtree(&(*tree)->right);
+}
+
+// Not AVL yet
+bool bst_remove(BSTree *tree, treeValueKey key)
+{
+    if (*tree == NULL) // Value not found
+        return false;
+
+    bool ret;
+    int cmp = bst_compare(key, bst_getKeyByValue((*tree)->value));
+    if (cmp < 0)
+        ret = bst_remove(&(*tree)->left, key);
+    if (cmp > 0)
+        ret = bst_remove(&(*tree)->right, key);
+    if (cmp != 0)
+        return ret;
+
+    // If execution hits here, the value to be removed was found
+    BSTree toBeRemoved = *tree;
+    if (toBeRemoved->left == NULL) {
+        if (toBeRemoved->right == NULL) {
+            free(toBeRemoved);
+            *tree = NULL;
+        } else {
+            *tree = toBeRemoved->right;
+            free(toBeRemoved);
+        }
+    } else if (toBeRemoved->right == NULL) {
+        *tree = toBeRemoved->left;
+        free(toBeRemoved);
+    } else {
+        // Find biggest of the left or smaller of the right
+        BSTree *save = bst_findMaxValueSubtree(&toBeRemoved->left);
+        toBeRemoved->value = (*save)->value;
+        bst_remove(save, bst_getKeyByValue((*save)->value));
+    }
+
+    return true;
+}
+
 bool bst_find(BSTree tree, treeValueKey key, treeValue *retValue)
 {
     if (tree == NULL)

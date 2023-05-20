@@ -65,8 +65,11 @@ int main()
             printf("The value \"%s\" was found!\n", ret->str);
         else
             puts("Key not found in the tree");
-        delBSTree(&myTree);
 
+        bst_remove(&myTree, 21);
+        bst_printTree(myTree);
+
+        delBSTree(&myTree);
         return 0;
     }
 
