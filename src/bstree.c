@@ -98,10 +98,32 @@ static void bst_RLrotation(BSTree *tree)
 
 //////////
 
+#ifndef NO_AVL
 static short bst_balanceFactor(BSTree tree)
 {
+    if (tree == NULL)
+        return 0;
     return bst_height(tree->right) - bst_height(tree->left);
 }
+
+static void bst_balance(BSTree *tree)
+{
+    short bf = bst_balanceFactor(*tree);
+    // Checking if the tree is balanced
+    if (bf <= -2) {
+        if (bst_balanceFactor((*tree)->left) < 0)
+            bst_LLrotation(tree);
+        else
+            bst_LRrotation(tree);
+    }
+    if (bf >= 2) {
+        if (bst_balanceFactor((*tree)->right) > 0)
+            bst_RRrotation(tree);
+        else
+            bst_RLrotation(tree);
+    }
+}
+#endif // NO_AVL
 
 bool bst_insert(BSTree *tree, treeValue value)
 {
@@ -126,21 +148,8 @@ bool bst_insert(BSTree *tree, treeValue value)
         return false;
 
 #ifndef NO_AVL
-    short bf = bst_balanceFactor(*tree);
-    // Checking if the tree is balanced
-    if (bf <= -2) {
-        if (bst_balanceFactor((*tree)->left) < 0)
-            bst_LLrotation(tree);
-        else
-            bst_LRrotation(tree);
-    }
-    if (bf >= 2) {
-        if (bst_balanceFactor((*tree)->right) > 0)
-            bst_RRrotation(tree);
-        else
-            bst_RLrotation(tree);
-    }
-#endif
+    bst_balance(tree);
+#endif // NO_AVL
 
     return ret;
 }
@@ -152,7 +161,6 @@ static BSTree *bst_findMaxValueSubtree(BSTree *tree)
     return bst_findMaxValueSubtree(&(*tree)->right);
 }
 
-// Not AVL yet
 bool bst_remove(BSTree *tree, treeValueKey key)
 {
     if (*tree == NULL) // Value not found
@@ -164,30 +172,34 @@ bool bst_remove(BSTree *tree, treeValueKey key)
         ret = bst_remove(&(*tree)->left, key);
     if (cmp > 0)
         ret = bst_remove(&(*tree)->right, key);
-    if (cmp != 0)
-        return ret;
-
-    // If execution hits here, the value to be removed was found
-    BSTree toBeRemoved = *tree;
-    if (toBeRemoved->left == NULL) {
-        if (toBeRemoved->right == NULL) {
+    if (cmp == 0) { // The value to be removed was found
+        BSTree toBeRemoved = *tree;
+        if (toBeRemoved->left == NULL) {
+            if (toBeRemoved->right == NULL) {
+                free(toBeRemoved);
+                *tree = NULL;
+            } else {
+                *tree = toBeRemoved->right;
+                free(toBeRemoved);
+            }
+        } else if (toBeRemoved->right == NULL) {
+            *tree = toBeRemoved->left;
             free(toBeRemoved);
-            *tree = NULL;
         } else {
-            *tree = toBeRemoved->right;
-            free(toBeRemoved);
+            // Find biggest of the left or smaller of the right
+            BSTree *save = bst_findMaxValueSubtree(&toBeRemoved->left);
+            toBeRemoved->value = (*save)->value;
+            bst_remove(save, bst_getKeyByValue((*save)->value));
         }
-    } else if (toBeRemoved->right == NULL) {
-        *tree = toBeRemoved->left;
-        free(toBeRemoved);
-    } else {
-        // Find biggest of the left or smaller of the right
-        BSTree *save = bst_findMaxValueSubtree(&toBeRemoved->left);
-        toBeRemoved->value = (*save)->value;
-        bst_remove(save, bst_getKeyByValue((*save)->value));
+        ret = true;
     }
 
-    return true;
+#ifndef NO_AVL
+    if (ret)
+        bst_balance(tree);
+#endif // NO_AVL
+
+    return ret;
 }
 
 bool bst_find(BSTree tree, treeValueKey key, treeValue *retValue)

@@ -66,6 +66,7 @@ int main()
         else
             puts("Key not found in the tree");
 
+        puts("Removing key 21...");
         bst_remove(&myTree, 21);
         bst_printTree(myTree);
 

@@ -45,6 +45,9 @@ void delBSTree(BSTree *tree);
  */
 bool bst_insert(BSTree *tree, treeValue value);
 
+/* Returns true if value with the corresponding key was removed, returns false
+ * if the key was not found.
+ */
 bool bst_remove(BSTree *tree, treeValueKey key);
 
 /* Greatest height of a BSTree. A BSTree with 1 element has height 0, and a
