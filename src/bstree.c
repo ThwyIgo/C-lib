@@ -9,7 +9,7 @@ typedef struct s_BSTree
     struct s_BSTree *left, *right;
 } * BSTree;
 
-#define bst_max(a, b) (bst_compare(a, b) >= 0 ? a : b)
+#define max(a, b) (a >= b ? a : b)
 
 BSTree newBSTree(treeValue initialValue)
 {
@@ -33,8 +33,8 @@ static long h_bst_height(BSTree tree, long height)
 {
     if (tree == NULL)
         return height - 1;
-    return bst_max(h_bst_height(tree->left, height + 1),
-                   h_bst_height(tree->right, height + 1));
+    return max(h_bst_height(tree->left, height + 1),
+               h_bst_height(tree->right, height + 1));
 }
 
 long bst_height(BSTree tree)
@@ -242,5 +242,3 @@ void bst_printTree(BSTree tree)
 {
     h_bst_printTree(tree, 0);
 }
-
-#undef bst_max
