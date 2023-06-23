@@ -16,9 +16,9 @@ else
 endif
 
 ## Variáveis genéricas
-CC ?= gcc
+CC=gcc
 # Flags que devem estar presentes em (quase) todos os comandos de compilação
-CFLAGS ?= -pedantic-errors -Wall -lm -I$(INC)
+CFLAGS=-pedantic-errors -Wall -lm -I$(INC)
 # ALL_CFLAGS são flags aplicadas em builds padrões (make all)
 ALL_CFLAGS=$(CFLAGS) -g
 RELEASE_CFLAGS=$(CFLAGS) -O2 -DNDEBUG
@@ -37,16 +37,15 @@ SUBMITNAME=projeto.zip
 ## Variáveis definidas automaticamente
 SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRCS))
-BIN=$(BINDIR)/main.exe
+BIN=$(BINDIR)/main$(SUFFIX)
+ifeq ($(OS), Windows_NT)
+	BIN:=$(BIN).exe
+endif
 
 all: $(BIN)
 
 ## Criação de diretórios
-
-$(BINDIR):
-	$(MKDIR) $@
-
-$(OBJ):
+$(BINDIR) $(OBJ):
 	$(MKDIR) $@
 
 #####
@@ -54,17 +53,16 @@ $(OBJ):
 forWindows: CC=x86_64-w64-mingw32-gcc
 forWindows: all
 
-release: ALL_CFLAGS=$(RELEASE_CFLAGS)
-release: clean
-release: $(BIN)
+release:
+	make ALL_CFLAGS="$(RELEASE_CFLAGS)" SUFFIX=-$@ OBJS="$(patsubst %.o,%-$@.o,$(OBJS))"
 
-debug: ALL_CFLAGS=$(DEBUG_CFLAGS)
-debug: $(BIN)
+debug:
+	make ALL_CFLAGS="$(DEBUG_CFLAGS)" SUFFIX=-$@ OBJS="$(patsubst %.o,%-$@.o,$(OBJS))"
 
 $(BIN): $(OBJS) | $(BINDIR)
-	$(CC) $(ALL_CFLAGS) $(OBJS) -o $@
+	$(CC) $(ALL_CFLAGS) $^ -o $@
 
-$(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
+$(OBJ)/%$(SUFFIX).o: $(SRC)/%.c | $(OBJ)
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 submit:
@@ -72,7 +70,7 @@ submit:
 	$(ZIP) $(SUBMITNAME) *
 
 run: $(BIN)
-	@$<
+	$<
 
 clean:
 	$(RM) $(call FixPath,$(BINDIR) $(OBJ) $(SUBMITNAME))
