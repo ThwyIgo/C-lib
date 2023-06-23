@@ -1,16 +1,17 @@
 ## Para gerar executáveis para windows a partir do linux, instale o pacote "mingw-w64" (debian/arch) ou equivalente.
-## (Apenas para Linux) Para gerar "compile_commands.json" (necessário para que o clangd interprete corretamente a organização do projeto), instale "bear" (Build EAR).
 
 ## Definindo variáveis específicas para cada sistema
-ifdef OS # Windows
+ifeq ($(OS), Windows_NT)
 	FixPath = $(subst /,\,$1)
 	RM=del /s /F /q
 	ZIP=powershell Compress-Archive -DestinationPath
+	MKDIR=mkdir
 else
-   ifeq ($(shell uname), Linux) # Linux
+   ifeq ($(shell uname), Linux)
 	FixPath = $1
 	RM=rm -rf
 	ZIP=zip
+	MKDIR=mkdir -p
    endif
 endif
 
@@ -22,16 +23,33 @@ CFLAGS ?= -pedantic-errors -Wall -lm -I$(INC)
 ALL_CFLAGS=$(CFLAGS) -g
 RELEASE_CFLAGS=$(CFLAGS) -O2 -DNDEBUG
 DEBUG_CFLAGS=$(CFLAGS) -g -fsanitize=address -fsanitize=undefined
+# Diretório do código fonte
 SRC=src
-OBJ=obj
+# Diretório com arquivos.h
 INC=include
-SRCS=$(wildcard $(SRC)/*.c)
-OBJS=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRCS))
+# Diretório com arquivos executáveis
 BINDIR=bin
-BIN=$(BINDIR)/main.exe
+# Diretório para armazanar arquivos.o
+OBJ=obj
+# Nome do arquivo zip do projeto
 SUBMITNAME=projeto.zip
 
+## Variáveis definidas automaticamente
+SRCS=$(wildcard $(SRC)/*.c)
+OBJS=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRCS))
+BIN=$(BINDIR)/main.exe
+
 all: $(BIN)
+
+## Criação de diretórios
+
+$(BINDIR):
+	$(MKDIR) $@
+
+$(OBJ):
+	$(MKDIR) $@
+
+#####
 
 forWindows: CC=x86_64-w64-mingw32-gcc
 forWindows: all
@@ -43,10 +61,10 @@ release: $(BIN)
 debug: ALL_CFLAGS=$(DEBUG_CFLAGS)
 debug: $(BIN)
 
-$(BIN): $(OBJS)
+$(BIN): $(OBJS) | $(BINDIR)
 	$(CC) $(ALL_CFLAGS) $(OBJS) -o $@
 
-$(OBJ)/%.o: $(SRC)/%.c
+$(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 submit:
@@ -54,11 +72,11 @@ submit:
 	$(ZIP) $(SUBMITNAME) *
 
 run: $(BIN)
-	$(call FixPath,$(BIN))
+	@$<
 
 clean:
-	$(RM) $(call FixPath,$(BINDIR)/*.exe $(OBJ)/*.o $(SUBMITNAME))
+	$(RM) $(call FixPath,$(BINDIR) $(OBJ) $(SUBMITNAME))
 
 ## Apenas no Linux
-genconfig-linux: clean
-	bear -- make clean all
+clangd:
+	@printf "%s\n" $(CFLAGS) > compile_flags.txt

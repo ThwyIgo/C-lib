@@ -8,6 +8,5 @@ pkgs.mkShell {
   ];
   packages = with pkgs; [
     zip
-    bear
   ];
 }
